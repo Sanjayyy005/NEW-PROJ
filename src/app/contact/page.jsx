@@ -81,7 +81,7 @@ export default function ContactPage() {
                       <Phone className="h-5 w-5 text-primary mt-1" />
                       <div>
                         <p className="font-medium">Phone</p>
-                        <p className="text-sm text-muted-foreground">+1 (555) 123-4567</p>
+                        <p className="text-sm text-muted-foreground">+977 9812345670</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
@@ -89,8 +89,8 @@ export default function ContactPage() {
                       <div>
                         <p className="font-medium">Address</p>
                         <p className="text-sm text-muted-foreground">
-                          123 Beauty Street<br />
-                          New York, NY 10001
+                          Tourism Board Street<br />
+                          Kohalpur, Banke 21900
                         </p>
                       </div>
                     </div>

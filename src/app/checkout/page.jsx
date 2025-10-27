@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -16,7 +16,7 @@ import Link from 'next/link';
 
 export default function CheckoutPage() {
   const { cart, cartTotal, cartCount, clearCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { data: session, isPending } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -154,7 +154,7 @@ export default function CheckoutPage() {
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold mb-8">Checkout</h1>
 
-          {!isAuthenticated && (
+          {!isPending && !session?.user && (
             <Alert className="mb-8">
               <AlertDescription>
                 <Link href="/auth/login" className="text-primary hover:underline">

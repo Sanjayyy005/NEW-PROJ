@@ -22,13 +22,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  turbopack: {
-    rules: {
-      "*.{jsx,tsx}": {
-        loaders: [LOADER]
-      }
-    }
-  }
+   experimental: {
+    allowedDevOrigins: ["192.168.1.69"], 
+  },
 };
+
 
 module.exports = nextConfig;
