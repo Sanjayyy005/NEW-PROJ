@@ -16,16 +16,23 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState('featured');
 
   useEffect(() => {
+    // Always sync with initialProducts to ensure new products are included
     const storedProducts = localStorage.getItem('products');
-    if (!storedProducts) {
-      localStorage.setItem('products', JSON.stringify(initialProducts));
-      setProducts(initialProducts);
-      setFilteredProducts(initialProducts);
-    } else {
-      const parsed = JSON.parse(storedProducts);
-      setProducts(parsed);
-      setFilteredProducts(parsed);
-    }
+    let currentProducts = storedProducts ? JSON.parse(storedProducts) : [];
+    
+    // Merge initialProducts with stored products, prioritizing initialProducts for new/updated items
+    const productMap = new Map();
+    
+    // First add all stored products
+    currentProducts.forEach(p => productMap.set(p.id, p));
+    
+    // Then add/update with initialProducts (this ensures new products and updates are included)
+    initialProducts.forEach(p => productMap.set(p.id, p));
+    
+    const mergedProducts = Array.from(productMap.values());
+    localStorage.setItem('products', JSON.stringify(mergedProducts));
+    setProducts(mergedProducts);
+    setFilteredProducts(mergedProducts);
     setLoading(false);
   }, []);
 

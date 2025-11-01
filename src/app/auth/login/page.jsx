@@ -25,24 +25,29 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await authClient.signIn.email({
+      const { data, error: signInError } = await authClient.signIn.email({
         email: email,
         password: password,
         rememberMe: rememberMe,
         callbackURL: "/"
       });
 
-      if (error?.code) {
-        setError('Invalid email or password. Please make sure you have already registered an account and try again.');
+      console.log('Login response:', { data, error: signInError });
+
+      if (signInError) {
+        // Show the actual error message from better-auth
+        const errorMessage = signInError.message || signInError.code || 'Invalid email or password.';
+        setError(errorMessage);
         setLoading(false);
         return;
       }
 
       toast.success('Login successful!');
-      router.push('/');
-      router.refresh();
+      // Force full page reload to refresh session
+      window.location.href = '/';
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      console.error('Login error:', err);
+      setError(err?.message || 'An error occurred. Please try again.');
       setLoading(false);
     }
   };

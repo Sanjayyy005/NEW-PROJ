@@ -8,13 +8,16 @@ import { initialProducts } from '@/data/products';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
-import { ShoppingCart, ArrowLeft } from 'lucide-react';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { ShoppingCart, ArrowLeft, Heart } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -37,7 +40,25 @@ export default function ProductDetailPage() {
           image: product.image,
         });
       }
+      toast.success('Added to cart');
       router.push('/cart');
+    }
+  };
+
+  const handleWishlistToggle = () => {
+    if (product) {
+      if (isInWishlist(product.id)) {
+        removeFromWishlist(product.id);
+        toast.success('Removed from wishlist');
+      } else {
+        addToWishlist({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+        });
+        toast.success('Added to wishlist');
+      }
     }
   };
 
@@ -95,6 +116,20 @@ export default function ProductDetailPage() {
               {product.featured && (
                 <Badge className="absolute top-4 right-4">Featured</Badge>
               )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 bg-white/90 hover:bg-white z-10"
+                onClick={handleWishlistToggle}
+              >
+                <Heart
+                  className={`h-6 w-6 ${
+                    isInWishlist(product.id)
+                      ? 'fill-red-500 text-red-500'
+                      : 'text-gray-600'
+                  }`}
+                />
+              </Button>
             </div>
 
             {/* Product Details */}
@@ -153,16 +188,32 @@ export default function ProductDetailPage() {
                 </div>
               </div>
 
-              {/* Add to Cart Button */}
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={handleAddToCart}
-                disabled={!product.inStock}
-              >
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-              </Button>
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <Button
+                  size="lg"
+                  className="flex-1"
+                  onClick={handleAddToCart}
+                  disabled={!product.inStock}
+                >
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleWishlistToggle}
+                  className="flex items-center justify-center"
+                >
+                  <Heart
+                    className={`h-5 w-5 ${
+                      isInWishlist(product.id)
+                        ? 'fill-red-500 text-red-500'
+                        : ''
+                    }`}
+                  />
+                </Button>
+              </div>
             </div>
           </div>
         </div>

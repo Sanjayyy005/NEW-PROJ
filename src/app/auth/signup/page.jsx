@@ -37,26 +37,42 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const { error } = await authClient.signUp.email({
+      // Sign up the user
+      const { data, error: signUpError } = await authClient.signUp.email({
         email: email,
         password: password,
         name: name,
       });
 
-      if (error?.code) {
-        if (error.code === 'USER_ALREADY_EXISTS') {
-          setError('Email already registered');
-        } else {
-          setError('Registration failed. Please try again.');
-        }
+      console.log('Signup response:', { data, error: signUpError });
+
+      if (signUpError) {
+        // Show the actual error message from better-auth
+        const errorMessage = signUpError.message || signUpError.code || 'Registration failed. Please try again.';
+        setError(errorMessage);
         setLoading(false);
         return;
       }
 
-      toast.success('Account created successfully! Please login.');
-      router.push('/auth/login?registered=true');
+      // Auto-login after successful signup
+      const { error: signInError } = await authClient.signIn.email({
+        email: email,
+        password: password,
+        callbackURL: "/"
+      });
+
+      if (signInError) {
+        toast.success('Account created! Redirecting to login...');
+        router.push('/auth/login');
+        return;
+      }
+
+      toast.success('Account created successfully! Welcome to BeautyHub.');
+      router.push('/');
+      router.refresh();
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      console.error('Signup error:', err);
+      setError(err?.message || 'An error occurred. Please try again.');
       setLoading(false);
     }
   };

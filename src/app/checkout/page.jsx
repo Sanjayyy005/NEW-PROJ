@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CreditCard, Lock, ShoppingBag } from 'lucide-react';
+import { CreditCard, Lock, ShoppingBag, Wallet, Smartphone, Banknote } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CheckoutPage() {
@@ -20,6 +20,39 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
+
+  // Payment methods configuration - you can add your payment links here
+  const paymentMethods = [
+    {
+      id: 'card',
+      name: 'Credit/Debit Card',
+      description: 'Pay with your card',
+      icon: CreditCard,
+      link: '', // Add your payment link here if needed
+    },
+    {
+      id: 'esewa',
+      name: 'eSewa Mobile Wallet',
+      description: 'eSewa Digital Payment',
+      icon: Wallet,
+      link: '', // Add eSewa payment link here
+    },
+    {
+      id: 'khalti',
+      name: 'Khalti by IME',
+      description: 'Mobile Wallet',
+      icon: Smartphone,
+      link: '', // Add Khalti payment link here
+    },
+    {
+      id: 'cod',
+      name: 'Cash on Delivery',
+      description: 'Pay when you receive',
+      icon: Banknote,
+      link: '', // No link needed for COD
+    },
+  ];
 
   const [shippingInfo, setShippingInfo] = useState({
     fullName: '',
@@ -51,6 +84,15 @@ export default function CheckoutPage() {
     }));
   };
 
+  const handlePaymentMethodSelect = (methodId, link) => {
+    setSelectedPaymentMethod(methodId);
+    
+    // If payment method has a link, open it in new tab
+    if (link) {
+      window.open(link, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -64,6 +106,7 @@ export default function CheckoutPage() {
         items: cart,
         total: cartTotal + (cartTotal >= 50 ? 0 : 5.99),
         shippingInfo,
+        paymentMethod: selectedPaymentMethod,
         date: new Date().toISOString(),
         status: 'Processing',
       };
@@ -155,14 +198,23 @@ export default function CheckoutPage() {
           <h1 className="text-4xl font-bold mb-8">Checkout</h1>
 
           {!isPending && !session?.user && (
-            <Alert className="mb-8">
-              <AlertDescription>
-                <Link href="/auth/login" className="text-primary hover:underline">
-                  Sign in
-                </Link>{' '}
-                to access faster checkout and order tracking.
-              </AlertDescription>
-            </Alert>
+            <Card className="mb-8 border-2">
+              <CardContent className="py-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Sign in</h3>
+                    <p className="text-sm text-muted-foreground">
+                      to access faster checkout and order tracking.
+                    </p>
+                  </div>
+                  <Link href="/auth/signup">
+                    <Button size="lg" className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90">
+                      Sign In
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           <form onSubmit={handleSubmit}>
@@ -246,75 +298,182 @@ export default function CheckoutPage() {
                   </CardContent>
                 </Card>
 
-                {/* Payment Information */}
+                {/* Payment Method Selection */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <CreditCard className="mr-2 h-5 w-5" />
-                      Payment Information
-                    </CardTitle>
+                    <CardTitle>Payment Method</CardTitle>
                     <CardDescription>
-                      All transactions are secure and encrypted
+                      Choose your preferred payment method
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg text-sm">
-                      <p className="font-semibold mb-2">💳 Test Mode - Use Test Card:</p>
-                      <p>Card Number: 4242 4242 4242 4242</p>
-                      <p>Expiry: Any future date (MM/YY)</p>
-                      <p>CVV: Any 3 digits</p>
+                  <CardContent>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {paymentMethods.map((method) => {
+                        const Icon = method.icon;
+                        return (
+                          <button
+                            key={method.id}
+                            type="button"
+                            onClick={() => handlePaymentMethodSelect(method.id, method.link)}
+                            className={`relative p-6 border-2 rounded-lg transition-all hover:border-primary hover:shadow-md ${
+                              selectedPaymentMethod === method.id
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border bg-card'
+                            }`}
+                          >
+                            <div className="flex flex-col items-center text-center space-y-3">
+                              <div className={`p-3 rounded-full ${
+                                selectedPaymentMethod === method.id
+                                  ? 'bg-primary/10'
+                                  : 'bg-secondary'
+                              }`}>
+                                <Icon className={`h-8 w-8 ${
+                                  selectedPaymentMethod === method.id
+                                    ? 'text-primary'
+                                    : 'text-muted-foreground'
+                                }`} />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm">{method.name}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {method.description}
+                                </p>
+                              </div>
+                            </div>
+                            {selectedPaymentMethod === method.id && (
+                              <div className="absolute top-2 right-2">
+                                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                                  <svg
+                                    className="w-3 h-3 text-primary-foreground"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={3}
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cardNumber">Card Number</Label>
-                      <Input
-                        id="cardNumber"
-                        name="cardNumber"
-                        placeholder="4242 4242 4242 4242"
-                        value={paymentInfo.cardNumber}
-                        onChange={handlePaymentChange}
-                        maxLength={19}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cardName">Cardholder Name</Label>
-                      <Input
-                        id="cardName"
-                        name="cardName"
-                        placeholder="John Doe"
-                        value={paymentInfo.cardName}
-                        onChange={handlePaymentChange}
-                        required
-                      />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiryDate">Expiry Date</Label>
-                        <Input
-                          id="expiryDate"
-                          name="expiryDate"
-                          placeholder="MM/YY"
-                          value={paymentInfo.expiryDate}
-                          onChange={handlePaymentChange}
-                          maxLength={5}
-                          required
-                        />
+
+                    {/* Additional instructions based on selected payment method */}
+                    {selectedPaymentMethod === 'khalti' && (
+                      <div className="mt-6 p-4 bg-secondary/30 rounded-lg text-sm">
+                        <p className="font-semibold mb-2">
+                          You will be redirected to your Khalti account to complete your payment:
+                        </p>
+                        <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                          <li>Login to your Khalti account using your Khalti ID and PIN</li>
+                          <li>Ensure your Khalti account is active and has sufficient balance</li>
+                          <li>Enter OTP (one time password) sent to your registered mobile number</li>
+                        </ol>
+                        <p className="mt-3 text-xs italic">***Login with your Khalti mobile and PIN.***</p>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input
-                          id="cvv"
-                          name="cvv"
-                          placeholder="123"
-                          value={paymentInfo.cvv}
-                          onChange={handlePaymentChange}
-                          maxLength={3}
-                          required
-                        />
+                    )}
+
+                    {selectedPaymentMethod === 'esewa' && (
+                      <div className="mt-6 p-4 bg-secondary/30 rounded-lg text-sm">
+                        <p className="font-semibold mb-2">
+                          You will be redirected to your eSewa account to complete your payment:
+                        </p>
+                        <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                          <li>Login to your eSewa account</li>
+                          <li>Verify payment details</li>
+                          <li>Confirm the transaction</li>
+                        </ol>
                       </div>
-                    </div>
+                    )}
+
+                    {selectedPaymentMethod === 'cod' && (
+                      <div className="mt-6 p-4 bg-secondary/30 rounded-lg text-sm">
+                        <p className="font-semibold mb-2">Cash on Delivery</p>
+                        <p className="text-muted-foreground">
+                          Pay with cash when your order is delivered to your doorstep.
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
+
+                {/* Payment Information - Only show for card payments */}
+                {selectedPaymentMethod === 'card' && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <CreditCard className="mr-2 h-5 w-5" />
+                        Card Information
+                      </CardTitle>
+                      <CardDescription>
+                        All transactions are secure and encrypted
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg text-sm">
+                        <p className="font-semibold mb-2">💳 Test Mode - Use Test Card:</p>
+                        <p>Card Number: 4242 4242 4242 4242</p>
+                        <p>Expiry: Any future date (MM/YY)</p>
+                        <p>CVV: Any 3 digits</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cardNumber">Card Number</Label>
+                        <Input
+                          id="cardNumber"
+                          name="cardNumber"
+                          placeholder="4242 4242 4242 4242"
+                          value={paymentInfo.cardNumber}
+                          onChange={handlePaymentChange}
+                          maxLength={19}
+                          required={selectedPaymentMethod === 'card'}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cardName">Cardholder Name</Label>
+                        <Input
+                          id="cardName"
+                          name="cardName"
+                          placeholder="John Doe"
+                          value={paymentInfo.cardName}
+                          onChange={handlePaymentChange}
+                          required={selectedPaymentMethod === 'card'}
+                        />
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="expiryDate">Expiry Date</Label>
+                          <Input
+                            id="expiryDate"
+                            name="expiryDate"
+                            placeholder="MM/YY"
+                            value={paymentInfo.expiryDate}
+                            onChange={handlePaymentChange}
+                            maxLength={5}
+                            required={selectedPaymentMethod === 'card'}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cvv">CVV</Label>
+                          <Input
+                            id="cvv"
+                            name="cvv"
+                            placeholder="123"
+                            value={paymentInfo.cvv}
+                            onChange={handlePaymentChange}
+                            maxLength={3}
+                            required={selectedPaymentMethod === 'card'}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Order Summary */}
@@ -337,8 +496,10 @@ export default function CheckoutPage() {
                       ))}
                     </div>
                     <div className="border-t pt-4 space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Subtotal</span>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Subtotal ({cartCount} {cartCount === 1 ? 'item' : 'items'} and shipping fee included)
+                        </span>
                         <span className="font-medium">${cartTotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
@@ -349,8 +510,8 @@ export default function CheckoutPage() {
                       </div>
                       <div className="border-t pt-2">
                         <div className="flex justify-between text-lg font-bold">
-                          <span>Total</span>
-                          <span className="text-primary">
+                          <span>Total Amount</span>
+                          <span className="text-orange-600 dark:text-orange-500">
                             ${(cartTotal + (cartTotal >= 50 ? 0 : 5.99)).toFixed(2)}
                           </span>
                         </div>
@@ -360,7 +521,7 @@ export default function CheckoutPage() {
                     <Button
                       type="submit"
                       size="lg"
-                      className="w-full"
+                      className="w-full bg-orange-600 hover:bg-orange-700 text-white"
                       disabled={loading}
                     >
                       {loading ? (
@@ -368,7 +529,7 @@ export default function CheckoutPage() {
                       ) : (
                         <>
                           <Lock className="mr-2 h-4 w-4" />
-                          Place Order
+                          Pay Now
                         </>
                       )}
                     </Button>

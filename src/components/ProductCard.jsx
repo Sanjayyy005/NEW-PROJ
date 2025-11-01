@@ -6,10 +6,13 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
-import { ShoppingCart } from 'lucide-react';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { ShoppingCart, Heart } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -19,6 +22,24 @@ export default function ProductCard({ product }) {
       price: product.price,
       image: product.image,
     });
+    toast.success('Added to cart');
+  };
+
+  const handleWishlistToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+      toast.success('Removed from wishlist');
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+      });
+      toast.success('Added to wishlist');
+    }
   };
 
   return (
@@ -34,6 +55,20 @@ export default function ProductCard({ product }) {
           {product.featured && (
             <Badge className="absolute top-2 right-2">Featured</Badge>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 bg-white/90 hover:bg-white z-10"
+            onClick={handleWishlistToggle}
+          >
+            <Heart
+              className={`h-5 w-5 ${
+                isInWishlist(product.id)
+                  ? 'fill-red-500 text-red-500'
+                  : 'text-gray-600'
+              }`}
+            />
+          </Button>
         </div>
         <CardContent className="p-4">
           <Badge variant="secondary" className="mb-2">

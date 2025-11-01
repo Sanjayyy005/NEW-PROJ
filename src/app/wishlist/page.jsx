@@ -68,6 +68,14 @@ export default function Navigation() {
               </button>
             </Link>
 
+            {!isPending && !isAuthenticated && (
+              <Link href="/auth/signup">
+                <Button className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90">
+                  Sign Up
+                </Button>
+              </Link>
+            )}
+
             {!isPending && isAuthenticated && (
               <>
                 <Link href="/admin">
