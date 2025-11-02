@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,16 +24,37 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+  inStock: boolean;
+  featured: boolean;
+}
+
+interface FormData {
+  name: string;
+  description: string;
+  price: string;
+  image: string;
+  category: string;
+  inStock: boolean;
+  featured: boolean;
+}
+
 export default function ProductsPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
     price: '',
@@ -61,14 +82,14 @@ export default function ProductsPage() {
     }
   }, [session]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (editingProduct) {
@@ -85,10 +106,15 @@ export default function ProductsPage() {
       localStorage.setItem('products', JSON.stringify(updatedProducts));
       toast.success('Product updated successfully!');
     } else {
-      const newProduct = {
+      const newProduct: Product = {
         id: Date.now().toString(),
-        ...formData,
+        name: formData.name,
+        description: formData.description,
         price: parseFloat(formData.price),
+        image: formData.image,
+        category: formData.category,
+        inStock: formData.inStock,
+        featured: formData.featured,
       };
       const updatedProducts = [...products, newProduct];
       setProducts(updatedProducts);
@@ -109,7 +135,7 @@ export default function ProductsPage() {
     setIsDialogOpen(false);
   };
 
-  const handleEdit = (product) => {
+  const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
@@ -123,7 +149,7 @@ export default function ProductsPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
       const updatedProducts = products.filter((p) => p.id !== id);
       setProducts(updatedProducts);

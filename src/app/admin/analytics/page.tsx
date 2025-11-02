@@ -3,17 +3,46 @@
 import { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import AdminLayout from '@/components/admin/AdminLayout';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { initialProducts } from '@/data/products';
 import { BarChart3, TrendingUp, ShoppingBag, DollarSign, Package } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  inStock: boolean;
+  featured: boolean;
+}
+
+interface OrderItem {
+  id?: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface Order {
+  id: string;
+  total: number;
+  items: OrderItem[];
+}
+
+interface CategoryStats {
+  [key: string]: {
+    count: number;
+    revenue: number;
+  };
+}
+
 export default function AnalyticsPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
-  const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     if (!isPending && !session?.user) {
@@ -42,7 +71,7 @@ export default function AnalyticsPage() {
   const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
   
   // Category breakdown
-  const categoryStats = products.reduce((acc, product) => {
+  const categoryStats: CategoryStats = products.reduce((acc, product) => {
     const category = product.category;
     if (!acc[category]) {
       acc[category] = { count: 0, revenue: 0 };
@@ -59,9 +88,9 @@ export default function AnalyticsPage() {
     });
     
     return acc;
-  }, {});
+  }, {} as CategoryStats);
 
-  const categoryData = Object.entries(categoryStats).map(([name, stats]: [string, any]) => ({
+  const categoryData = Object.entries(categoryStats).map(([name, stats]) => ({
     name,
     count: stats.count,
     revenue: stats.revenue,

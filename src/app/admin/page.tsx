@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import AdminLayout from "@/components/admin/AdminLayout";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import DashboardStats from "@/components/admin/DashboardStats";
 import RecentOrders from "@/components/admin/RecentOrders";
 import TopProducts from "@/components/admin/TopProducts";
