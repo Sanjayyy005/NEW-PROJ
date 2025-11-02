@@ -10,7 +10,7 @@ interface StatsProps {
   totalRevenue: number;
 }
 
-export default function DashboardStats({ totalProducts, totalOrders, totalUsers, totalRevenue }: StatsProps) {
+export function DashboardStats({ totalProducts, totalOrders, totalUsers, totalRevenue }: StatsProps) {
   const stats = [
     {
       title: 'Total Revenue',
@@ -76,3 +76,5 @@ export default function DashboardStats({ totalProducts, totalOrders, totalUsers,
     </div>
   );
 }
+
+export default DashboardStats;
