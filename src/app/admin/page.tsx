@@ -4,33 +4,40 @@ import { useEffect, useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import DashboardStats from "@/components/admin/DashboardStats";
+import { DashboardStats } from "@/components/admin/DashboardStats";
 import RecentOrders from "@/components/admin/RecentOrders";
 import TopProducts from "@/components/admin/TopProducts";
-import { initialProducts } from "@/data/products";
 import { toast } from "sonner";
 
 interface Product {
   id: string;
   name: string;
+  description: string;
   price: number;
+  image: string;
+  category: string;
+  inStock: boolean;
+  featured: boolean;
   stock: number;
-  sold?: number;
 }
 
 interface OrderItem {
-  productId: string;
+  id: string;
+  name: string;
   quantity: number;
   price: number;
 }
 
 interface Order {
   id: string;
-  userId?: string;
+  date: number;
+  items: OrderItem[];
   total: number;
-  date?: string;
-  status?: "pending" | "completed" | "cancelled";
-  items?: OrderItem[];
+  status: string;
+  shippingInfo: {
+    fullName: string;
+    email: string;
+  };
 }
 
 interface User {
@@ -67,8 +74,33 @@ export default function AdminPage() {
         if (storedProducts) {
           setProducts(JSON.parse(storedProducts) as Product[]);
         } else {
-          localStorage.setItem("products", JSON.stringify(initialProducts));
-          setProducts(initialProducts);
+          // Initialize with default products if none exist
+          const defaultProducts: Product[] = [
+            {
+              id: "1",
+              name: "Radiant Glow Serum",
+              description: "Brightening serum with vitamin C",
+              price: 45.99,
+              image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400",
+              category: "Skincare",
+              inStock: true,
+              featured: true,
+              stock: 50,
+            },
+            {
+              id: "2",
+              name: "Luxury Lipstick Set",
+              description: "5-piece premium lipstick collection",
+              price: 89.99,
+              image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400",
+              category: "Makeup",
+              inStock: true,
+              featured: true,
+              stock: 30,
+            },
+          ];
+          localStorage.setItem("products", JSON.stringify(defaultProducts));
+          setProducts(defaultProducts);
         }
 
         // Orders
@@ -76,7 +108,7 @@ export default function AdminPage() {
         if (storedOrders) {
           setOrders(JSON.parse(storedOrders) as Order[]);
         } else {
-          setOrders([]); // safe fallback
+          setOrders([]);
         }
 
         // Users
@@ -92,10 +124,10 @@ export default function AdminPage() {
             const data: User[] = await response.json();
             setUsers(data);
           } else {
-            setUsers([]); // fallback
+            setUsers([]);
           }
         } else {
-          setUsers([]); // fallback
+          setUsers([]);
         }
       } catch (error) {
         console.error("Error loading data:", error);

@@ -3,19 +3,20 @@ import { createAuthClient } from "better-auth/react"
 import { useEffect, useState } from "react"
 
 export const authClient = createAuthClient({
-   baseURL: typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL,
+   baseURL: typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   fetchOptions: {
-      headers: {
-        Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem("bearer_token") : ""}`,
-      },
-      onSuccess: (ctx) => {
+      onSuccess: (ctx: { response: { headers: { get: (arg0: string) => any; }; }; }) => {
           const authToken = ctx.response.headers.get("set-auth-token")
-          // Store the token securely (e.g., in localStorage)
+          // Store the full token (don't split it)
           if(authToken){
-            // Split token at "." and take only the first part
-            const tokenPart = authToken.includes('.') ? authToken.split('.')[0] : authToken;
-            localStorage.setItem("bearer_token", tokenPart);
+            localStorage.setItem("bearer_token", authToken);
           }
+      },
+      onRequest: (ctx: { headers: { set: (arg0: string,arg1: string) => void; }; }) => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem("bearer_token") : "";
+        if (token) {
+          ctx.headers.set("Authorization", `Bearer ${token}`);
+        }
       }
   }
 });
@@ -25,10 +26,11 @@ type SessionData = ReturnType<typeof authClient.useSession>
 export function useSession(): SessionData {
    const [session, setSession] = useState<any>(null);
    const [isPending, setIsPending] = useState(true);
+   const [isRefetching, setIsRefetching] = useState(false);
    const [error, setError] = useState<any>(null);
 
    const refetch = () => {
-      setIsPending(true);
+      setIsRefetching(true);
       setError(null);
       fetchSession();
    };
@@ -50,6 +52,7 @@ export function useSession(): SessionData {
          setError(err);
       } finally {
          setIsPending(false);
+         setIsRefetching(false);
       }
    };
 
@@ -57,5 +60,5 @@ export function useSession(): SessionData {
       fetchSession();
    }, []);
 
-   return { data: session, isPending, error, refetch };
+   return { data: session, isPending, isRefetching, error, refetch };
 }

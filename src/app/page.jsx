@@ -7,29 +7,23 @@ import ProductCard from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { initialProducts } from '@/data/products';
 import Link from 'next/link';
-import { Sparkles, Package, Truck, Shield } from 'lucide-react';
+import { Sparkles, Package, Truck, Shield, User } from 'lucide-react';
+import { useSession } from '@/lib/auth-client';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { data: session, isPending } = useSession();
 
   useEffect(() => {
-    // Always sync with initialProducts to ensure new products are included
+    // Initialize products in localStorage if not exists
     const storedProducts = localStorage.getItem('products');
-    let currentProducts = storedProducts ? JSON.parse(storedProducts) : [];
-    
-    // Merge initialProducts with stored products, prioritizing initialProducts for new/updated items
-    const productMap = new Map();
-    
-    // First add all stored products
-    currentProducts.forEach(p => productMap.set(p.id, p));
-    
-    // Then add/update with initialProducts (this ensures new products and updates are included)
-    initialProducts.forEach(p => productMap.set(p.id, p));
-    
-    const mergedProducts = Array.from(productMap.values());
-    localStorage.setItem('products', JSON.stringify(mergedProducts));
-    setProducts(mergedProducts);
+    if (!storedProducts) {
+      localStorage.setItem('products', JSON.stringify(initialProducts));
+      setProducts(initialProducts);
+    } else {
+      setProducts(JSON.parse(storedProducts));
+    }
     setLoading(false);
   }, []);
 
@@ -39,6 +33,27 @@ export default function Home() {
     <>
       <Navigation />
       <main>
+        {/* User Welcome Section - Shows after signup/login */}
+        {!isPending && session?.user && (
+          <section className="bg-gradient-to-r from-purple-500 to-pink-500 text-white py-8">
+            <div className="container mx-auto px-4">
+              <div className="flex items-center justify-center gap-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/20">
+                  <User className="h-6 w-6" />
+                </div>
+                <div className="text-center sm:text-left">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-1">
+                    Welcome, {session.user.name}! 🎉
+                  </h2>
+                  <p className="text-sm sm:text-base opacity-90">
+                    Logged in as: {session.user.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Hero Section */}
         <section className="relative h-[600px] bg-gradient-to-r from-pink-100 to-purple-100 dark:from-pink-950 dark:to-purple-950">
           <div className="container mx-auto px-4 h-full flex items-center">

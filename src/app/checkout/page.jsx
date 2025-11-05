@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreditCard, Lock, ShoppingBag, Wallet, Smartphone, Banknote } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,6 +22,10 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
+  const [showEsewaDialog, setShowEsewaDialog] = useState(false);
+  const [showKhaltiDialog, setShowKhaltiDialog] = useState(false);
+  const [showPaymentVerification, setShowPaymentVerification] = useState(false);
+  const [paymentVerificationMethod, setPaymentVerificationMethod] = useState('');
 
   // Payment methods configuration - you can add your payment links here
   const paymentMethods = [
@@ -70,6 +75,16 @@ export default function CheckoutPage() {
     cvv: '',
   });
 
+  const [esewaCredentials, setEsewaCredentials] = useState({
+    esewaId: '',
+    password: '',
+  });
+
+  const [khaltiCredentials, setKhaltiCredentials] = useState({
+    mobileOrEmail: '',
+    password: '',
+  });
+
   const handleShippingChange = (e) => {
     setShippingInfo((prev) => ({
       ...prev,
@@ -87,10 +102,26 @@ export default function CheckoutPage() {
   const handlePaymentMethodSelect = (methodId, link) => {
     setSelectedPaymentMethod(methodId);
     
-    // If payment method has a link, open it in new tab
-    if (link) {
-      window.open(link, '_blank', 'noopener,noreferrer');
+    // Show respective dialog for eSewa and Khalti
+    if (methodId === 'esewa') {
+      setShowEsewaDialog(true);
+    } else if (methodId === 'khalti') {
+      setShowKhaltiDialog(true);
     }
+  };
+
+  const handleEsewaLogin = (e) => {
+    e.preventDefault();
+    setShowEsewaDialog(false);
+    setPaymentVerificationMethod('eSewa');
+    setShowPaymentVerification(true);
+  };
+
+  const handleKhaltiLogin = (e) => {
+    e.preventDefault();
+    setShowKhaltiDialog(false);
+    setPaymentVerificationMethod('Khalti');
+    setShowPaymentVerification(true);
   };
 
   const handleSubmit = async (e) => {
@@ -308,90 +339,168 @@ export default function CheckoutPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {paymentMethods.map((method) => {
-                        const Icon = method.icon;
-                        return (
-                          <button
-                            key={method.id}
-                            type="button"
-                            onClick={() => handlePaymentMethodSelect(method.id, method.link)}
-                            className={`relative p-6 border-2 rounded-lg transition-all hover:border-primary hover:shadow-md ${
-                              selectedPaymentMethod === method.id
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border bg-card'
-                            }`}
-                          >
-                            <div className="flex flex-col items-center text-center space-y-3">
-                              <div className={`p-3 rounded-full ${
-                                selectedPaymentMethod === method.id
-                                  ? 'bg-primary/10'
-                                  : 'bg-secondary'
-                              }`}>
-                                <Icon className={`h-8 w-8 ${
-                                  selectedPaymentMethod === method.id
-                                    ? 'text-primary'
-                                    : 'text-muted-foreground'
-                                }`} />
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">{method.name}</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {method.description}
-                                </p>
-                              </div>
+                      {/* Card Payment */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPaymentMethod('card')}
+                        className={`relative p-6 border-2 rounded-lg transition-all hover:border-primary hover:shadow-md ${
+                          selectedPaymentMethod === 'card'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border bg-card'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center text-center space-y-3">
+                          <div className={`p-3 rounded-full ${
+                            selectedPaymentMethod === 'card'
+                              ? 'bg-primary/10'
+                              : 'bg-secondary'
+                          }`}>
+                            <CreditCard className={`h-8 w-8 ${
+                              selectedPaymentMethod === 'card'
+                                ? 'text-primary'
+                                : 'text-muted-foreground'
+                            }`} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">Credit/Debit Card</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Pay with your card
+                            </p>
+                          </div>
+                        </div>
+                        {selectedPaymentMethod === 'card' && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                              <svg className="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
                             </div>
-                            {selectedPaymentMethod === method.id && (
-                              <div className="absolute top-2 right-2">
-                                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                                  <svg
-                                    className="w-3 h-3 text-primary-foreground"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={3}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                </div>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
+                          </div>
+                        )}
+                      </button>
+
+                      {/* eSewa */}
+                      <button
+                        type="button"
+                        onClick={() => handlePaymentMethodSelect('esewa')}
+                        className={`relative p-6 border-2 rounded-lg transition-all hover:border-primary hover:shadow-md ${
+                          selectedPaymentMethod === 'esewa'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border bg-card'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center text-center space-y-3">
+                          <div className={`p-3 rounded-full ${
+                            selectedPaymentMethod === 'esewa'
+                              ? 'bg-green-100 dark:bg-green-900'
+                              : 'bg-secondary'
+                          }`}>
+                            <Wallet className={`h-8 w-8 ${
+                              selectedPaymentMethod === 'esewa'
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-muted-foreground'
+                            }`} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">eSewa Mobile Wallet</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              eSewa Digital Payment
+                            </p>
+                          </div>
+                        </div>
+                        {selectedPaymentMethod === 'esewa' && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                              <svg className="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+
+                      {/* Khalti */}
+                      <button
+                        type="button"
+                        onClick={() => handlePaymentMethodSelect('khalti')}
+                        className={`relative p-6 border-2 rounded-lg transition-all hover:border-primary hover:shadow-md ${
+                          selectedPaymentMethod === 'khalti'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border bg-card'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center text-center space-y-3">
+                          <div className={`p-3 rounded-full ${
+                            selectedPaymentMethod === 'khalti'
+                              ? 'bg-purple-100 dark:bg-purple-900'
+                              : 'bg-secondary'
+                          }`}>
+                            <Smartphone className={`h-8 w-8 ${
+                              selectedPaymentMethod === 'khalti'
+                                ? 'text-purple-600 dark:text-purple-400'
+                                : 'text-muted-foreground'
+                            }`} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">Khalti by IME</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Mobile Wallet
+                            </p>
+                          </div>
+                        </div>
+                        {selectedPaymentMethod === 'khalti' && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                              <svg className="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+
+                      {/* Cash on Delivery */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPaymentMethod('cod')}
+                        className={`relative p-6 border-2 rounded-lg transition-all hover:border-primary hover:shadow-md ${
+                          selectedPaymentMethod === 'cod'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border bg-card'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center text-center space-y-3">
+                          <div className={`p-3 rounded-full ${
+                            selectedPaymentMethod === 'cod'
+                              ? 'bg-primary/10'
+                              : 'bg-secondary'
+                          }`}>
+                            <Banknote className={`h-8 w-8 ${
+                              selectedPaymentMethod === 'cod'
+                                ? 'text-primary'
+                                : 'text-muted-foreground'
+                            }`} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">Cash on Delivery</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Pay when you receive
+                            </p>
+                          </div>
+                        </div>
+                        {selectedPaymentMethod === 'cod' && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                              <svg className="w-3 h-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </button>
                     </div>
 
                     {/* Additional instructions based on selected payment method */}
-                    {selectedPaymentMethod === 'khalti' && (
-                      <div className="mt-6 p-4 bg-secondary/30 rounded-lg text-sm">
-                        <p className="font-semibold mb-2">
-                          You will be redirected to your Khalti account to complete your payment:
-                        </p>
-                        <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                          <li>Login to your Khalti account using your Khalti ID and PIN</li>
-                          <li>Ensure your Khalti account is active and has sufficient balance</li>
-                          <li>Enter OTP (one time password) sent to your registered mobile number</li>
-                        </ol>
-                        <p className="mt-3 text-xs italic">***Login with your Khalti mobile and PIN.***</p>
-                      </div>
-                    )}
-
-                    {selectedPaymentMethod === 'esewa' && (
-                      <div className="mt-6 p-4 bg-secondary/30 rounded-lg text-sm">
-                        <p className="font-semibold mb-2">
-                          You will be redirected to your eSewa account to complete your payment:
-                        </p>
-                        <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                          <li>Login to your eSewa account</li>
-                          <li>Verify payment details</li>
-                          <li>Confirm the transaction</li>
-                        </ol>
-                      </div>
-                    )}
-
                     {selectedPaymentMethod === 'cod' && (
                       <div className="mt-6 p-4 bg-secondary/30 rounded-lg text-sm">
                         <p className="font-semibold mb-2">Cash on Delivery</p>
@@ -544,6 +653,188 @@ export default function CheckoutPage() {
           </form>
         </div>
       </main>
+
+      {/* eSewa Payment Dialog */}
+      <Dialog open={showEsewaDialog} onOpenChange={setShowEsewaDialog}>
+        <DialogContent className="sm:max-w-md">
+          <div className="bg-gradient-to-b from-green-600 to-green-700 -mt-6 -mx-6 pt-8 pb-6 px-6 rounded-t-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                <span className="text-green-600 font-bold text-xl">e</span>
+              </div>
+              <h2 className="text-3xl font-bold text-white">Sewa</h2>
+            </div>
+          </div>
+          <DialogHeader className="mt-4">
+            <DialogTitle className="text-2xl">Welcome</DialogTitle>
+            <DialogDescription>Please enter your eSewa credentials</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEsewaLogin} className="space-y-6 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="esewaId" className="text-base font-semibold">eSewa ID</Label>
+              <Input
+                id="esewaId"
+                placeholder="eSewa Id"
+                value={esewaCredentials.esewaId}
+                onChange={(e) => setEsewaCredentials({...esewaCredentials, esewaId: e.target.value})}
+                required
+                className="h-12"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="esewaPassword" className="text-base font-semibold">Password</Label>
+              <Input
+                id="esewaPassword"
+                type="password"
+                placeholder="Password"
+                value={esewaCredentials.password}
+                onChange={(e) => setEsewaCredentials({...esewaCredentials, password: e.target.value})}
+                required
+                className="h-12"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full h-12 bg-green-600 hover:bg-green-700 text-white text-base font-medium"
+            >
+              Login
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              © 2009-2025 eSewa. All Rights Reserved.
+            </p>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Khalti Payment Dialog */}
+      <Dialog open={showKhaltiDialog} onOpenChange={setShowKhaltiDialog}>
+        <DialogContent className="sm:max-w-md">
+          <div className="flex justify-center mb-6">
+            <div className="flex items-center gap-2">
+              <span className="text-4xl font-bold text-purple-700">khalti</span>
+              <div className="text-xs text-muted-foreground">by IME</div>
+            </div>
+          </div>
+          <DialogHeader>
+            <DialogTitle className="text-center text-lg">Please enter your Khalti credentials</DialogTitle>
+            <DialogDescription className="text-center text-sm pt-2">
+              You will be redirected to your Khalti account to complete your payment.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-secondary/50 p-4 rounded-lg text-xs space-y-2 mt-2">
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Login to your Khalti account using your Khalti ID and your Password</li>
+              <li>Ensure your Khalti account is active and has sufficient balance</li>
+              <li>Enter OTP (One Time Password) sent to your registered mobile number</li>
+            </ol>
+            <p className="italic font-medium mt-3">***Login with your Khalti ID and Password</p>
+          </div>
+          <form onSubmit={handleKhaltiLogin} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <Input
+                  id="khaltiMobile"
+                  placeholder="Mobile or E-mail"
+                  value={khaltiCredentials.mobileOrEmail}
+                  onChange={(e) => setKhaltiCredentials({...khaltiCredentials, mobileOrEmail: e.target.value})}
+                  required
+                  className="h-12 pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                  </svg>
+                </div>
+                <Input
+                  id="khaltiPassword"
+                  type="password"
+                  placeholder="Password"
+                  value={khaltiCredentials.password}
+                  onChange={(e) => setKhaltiCredentials({...khaltiCredentials, password: e.target.value})}
+                  required
+                  className="h-12 pl-10"
+                />
+              </div>
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full h-12 bg-purple-700 hover:bg-purple-800 text-white text-base font-medium"
+            >
+              LOGIN
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              © 2017 - 2025 Khalti. All Rights Reserved.
+            </p>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Verification Dialog */}
+      <Dialog open={showPaymentVerification} onOpenChange={setShowPaymentVerification}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">Check Payment</DialogTitle>
+          </DialogHeader>
+          <div className="py-8 space-y-6">
+            <div className="flex justify-center">
+              <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center animate-pulse">
+                <svg className="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold">Verifying Your Payment</h3>
+              <p className="text-muted-foreground">
+                Please wait while we verify your {paymentVerificationMethod} payment...
+              </p>
+            </div>
+            <div className="bg-secondary/30 p-4 rounded-lg space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Payment Method:</span>
+                <span className="font-medium">{paymentVerificationMethod}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Amount:</span>
+                <span className="font-medium">${(cartTotal + (cartTotal >= 50 ? 0 : 5.99)).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Status:</span>
+                <span className="text-yellow-600 dark:text-yellow-500 font-medium">Pending Verification</span>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setShowPaymentVerification(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => {
+                  setShowPaymentVerification(false);
+                  // You can trigger the order submission here
+                  handleSubmit({ preventDefault: () => {} });
+                }}
+              >
+                Confirm Payment
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </>
   );

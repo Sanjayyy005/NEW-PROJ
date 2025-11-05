@@ -1,0 +1,110 @@
+{
+  "info": {
+    "name": "Next.js Auth API",
+    "_postman_id": "cfa2a421-2cfb-4d72-b8e0-321b9919c9e5",
+    "description": "Collection for testing authentication routes (signup, signin, session, signout) in Next.js + better-auth.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Sign Up (Email)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Test123456!\",\n  \"name\": \"New User\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/sign-up/email",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "sign-up", "email"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Sign In (Email)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Test123456!\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/sign-in/email",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "sign-in", "email"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Session",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/auth/get-session",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "get-session"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Sign Out",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/sign-out",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "sign-out"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}

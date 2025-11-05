@@ -1,177 +1,145 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSession } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { AdminLayout } from "@/components/admin/AdminLayout";
-import { DashboardStats } from "@/components/admin/DashboardStats";
-import RecentOrders from "@/components/admin/RecentOrders";
-import TopProducts from "@/components/admin/TopProducts";
-import { toast } from "sonner";
+import { useWishlist } from '@/contexts/WishlistContext';
+import { useCart } from '@/contexts/CartContext';
+import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-  inStock: boolean;
-  featured: boolean;
-  stock: number;
-}
+export default function WishlistPage() {
+  const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
+  const { addToCart } = useCart();
 
-interface OrderItem {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-}
-
-interface Order {
-  id: string;
-  date: number;
-  items: OrderItem[];
-  total: number;
-  status: string;
-  shippingInfo: {
-    fullName: string;
-    email: string;
+  const handleAddToCart = (item) => {
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+    });
   };
-}
 
-interface User {
-  id: string;
-  name?: string;
-  email?: string;
-  role?: "admin" | "customer";
-}
+  const handleMoveAllToCart = () => {
+    wishlist.forEach((item) => {
+      addToCart({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+      });
+    });
+    clearWishlist();
+  };
 
-export default function AdminPage() {
-  const { data: session, isPending } = useSession();
-  const router = useRouter();
-
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Redirect if no session
-  useEffect(() => {
-    if (!isPending && !session?.user) {
-      router.push("/auth/login");
-    }
-  }, [session, isPending, router]);
-
-  // Load data
-  useEffect(() => {
-    if (!session?.user) return;
-
-    const loadData = async () => {
-      try {
-        // Products
-        const storedProducts = localStorage.getItem("products");
-        if (storedProducts) {
-          setProducts(JSON.parse(storedProducts) as Product[]);
-        } else {
-          // Initialize with default products if none exist
-          const defaultProducts: Product[] = [
-            {
-              id: "1",
-              name: "Radiant Glow Serum",
-              description: "Brightening serum with vitamin C",
-              price: 45.99,
-              image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400",
-              category: "Skincare",
-              inStock: true,
-              featured: true,
-              stock: 50,
-            },
-            {
-              id: "2",
-              name: "Luxury Lipstick Set",
-              description: "5-piece premium lipstick collection",
-              price: 89.99,
-              image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400",
-              category: "Makeup",
-              inStock: true,
-              featured: true,
-              stock: 30,
-            },
-          ];
-          localStorage.setItem("products", JSON.stringify(defaultProducts));
-          setProducts(defaultProducts);
-        }
-
-        // Orders
-        const storedOrders = localStorage.getItem("orders");
-        if (storedOrders) {
-          setOrders(JSON.parse(storedOrders) as Order[]);
-        } else {
-          setOrders([]);
-        }
-
-        // Users
-        const token = localStorage.getItem("bearer_token");
-        if (token) {
-          const response = await fetch("/api/users", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (response.ok) {
-            const data: User[] = await response.json();
-            setUsers(data);
-          } else {
-            setUsers([]);
-          }
-        } else {
-          setUsers([]);
-        }
-      } catch (error) {
-        console.error("Error loading data:", error);
-        toast.error("Error loading dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [session]);
-
-  const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
-
-  if (isPending || loading) {
+  if (wishlist.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <>
+        <Navigation />
+        <main className="min-h-screen py-16">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col items-center justify-center py-20">
+              <Heart className="h-24 w-24 text-muted-foreground mb-6" />
+              <h1 className="text-3xl font-bold mb-4">Your wishlist is empty</h1>
+              <p className="text-muted-foreground mb-8">
+                Add products you love to your wishlist
+              </p>
+              <Link href="/products">
+                <Button size="lg">
+                  Browse Products
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
     );
   }
 
-  if (!session?.user) {
-    return null;
-  }
-
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <DashboardStats
-          totalProducts={products.length}
-          totalOrders={orders.length}
-          totalUsers={users.length}
-          totalRevenue={totalRevenue}
-        />
+    <>
+      <Navigation />
+      <main className="min-h-screen py-16">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">My Wishlist</h1>
+              <p className="text-muted-foreground">
+                {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'}
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                onClick={clearWishlist}
+              >
+                Clear Wishlist
+              </Button>
+              <Button onClick={handleMoveAllToCart}>
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Move All to Cart
+              </Button>
+            </div>
+          </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <RecentOrders orders={orders} />
-          <TopProducts products={products} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {wishlist.map((item) => (
+              <Card key={item.id} className="overflow-hidden">
+                <Link href={`/products/${item.id}`}>
+                  <div className="relative h-64 overflow-hidden cursor-pointer">
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      className="object-cover hover:scale-105 transition-transform"
+                    />
+                  </div>
+                </Link>
+                <CardContent className="p-4">
+                  <Badge variant="secondary" className="mb-2">
+                    {item.category}
+                  </Badge>
+                  <Link href={`/products/${item.id}`}>
+                    <h3 className="font-semibold text-lg mb-2 hover:text-primary cursor-pointer">
+                      {item.name}
+                    </h3>
+                  </Link>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    {item.description}
+                  </p>
+                  <p className="text-xl font-bold text-primary mb-4">
+                    ${item.price.toFixed(2)}
+                  </p>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1"
+                      onClick={() => handleAddToCart(item)}
+                      disabled={!item.inStock}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Add to Cart
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => removeFromWishlist(item.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
-    </AdminLayout>
+      </main>
+      <Footer />
+    </>
   );
 }
