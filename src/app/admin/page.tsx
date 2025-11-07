@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { DashboardStats } from "@/components/admin/DashboardStats";
+import { DashboardStats } from "@/components/admin/DashboardStates";
 import RecentOrders from "@/components/admin/RecentOrders";
 import TopProducts from "@/components/admin/TopProducts";
 import { toast } from "sonner";
